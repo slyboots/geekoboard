@@ -1,11 +1,13 @@
 [[source]]
 name = "pypi"
-url = "https://pypi.org/simple"
+url = "https://pypi.org/pypi"
 verify_ssl = true
 
 [dev-packages]
+pylint = "*"
 
 [packages]
+geckoboard-py = "1.0.0"
 
 [requires]
 python_version = "3.7"
