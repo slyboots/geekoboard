@@ -1,6 +1,7 @@
 # Project Stuff
 .env
 notes.md
+credentials/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
