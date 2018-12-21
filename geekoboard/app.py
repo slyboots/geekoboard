@@ -1,28 +1,57 @@
-import os
-import datetime
+import os, sys, json, datetime
+import geckoboard
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
 
-# If modifying these scopes, delete the file token.json.
+# VARS
+CLIENT = geckoboard.client(os.getenv('GECKO_API_KEY'))
+DATASET_NAME = 'agents.active_groups'
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 CREDENTIALS = os.getenv('GOOGLE_SHEETS_CLIENT_CREDENTIALS')
 TOKEN = os.getenv('GOOGLE_SHEETS_TOKEN')
-
-# spreadsheet / range info
 SHEET_ID = os.getenv('SCHEDULE_SHEET_ID')
 AGENT_SCHEDULES_RANGE = 'AgentSchedules'
 SCHEDULE_TIMELINE_RANGE = 'ScheduleTimeline'
+SCHEDULE_SCHEMA = {
+    'agent': {
+        'type': 'string',
+        'name': 'Agent',
+        'optional': False
+    },
+    'group': {
+        'type': 'string',
+        'name': "Group",
+        'optional': False
+    },
+    'online': {
+        'type': 'number',
+        'name': 'Status',
+        'optional': True
+    }
+}
+
 
 def current_hour():
     '''gets the current hour out of 24 as an int'''
     return datetime.datetime.now().hour
-
-
 def to_24hour(hourstring):
     '''converts a time string like 8AM or 5PM to an int representing its 24 hour value'''
     offset = 12 if all(x not in hourstring for x in['12', 'AM']) else 0
     return (int(hourstring[:-2])+offset)%24
+def format_dataset(raw_schedule):
+    return [{'agent': k.upper(), 'group': v.upper(), 'online': 0} for k, v in raw_schedule.items()]
+
+def get_schedule(schema):
+    print(f"Retrieving gecko dataset: {DATASET_NAME}")
+    return CLIENT.datasets.find_or_create(DATASET_NAME, schema)
+def set_schedule(data, schema):
+    print(f"Setting schedule with data:\n{json.dumps(data,indent=2)}")
+    schedule = get_schedule(schema)
+    schedule.put(data)
+def delete_schedule():
+    print(f"Deleting gecko dataset: {DATASET_NAME}")
+    CLIENT.datasets.delete(DATASET_NAME)
 
 
 def get_service():
@@ -33,8 +62,6 @@ def get_service():
         creds = tools.run_flow(flow, store)
     service = build('sheets', 'v4', http=creds.authorize(Http()))
     return service.spreadsheets()
-
-
 def get_schedule_timeline(sheets=None):
     if not sheets:
         sheets = get_service()
@@ -44,8 +71,6 @@ def get_schedule_timeline(sheets=None):
         raise ValueError(f"no data found for {SCHEDULE_TIMELINE_RANGE} range")
     else:
         return [to_24hour(x) for x in values[0]]
-
-
 def get_agent_schedules(sheets=None):
     if not sheets:
         sheets = get_service()
@@ -55,8 +80,6 @@ def get_agent_schedules(sheets=None):
         raise ValueError(f"no data found for {AGENT_SCHEDULES_RANGE} range")
     else:
         return values
-
-
 def current_agent_statuses():
     agent_statuses = {}
     timeblock = get_schedule_timeline().index(current_hour())
@@ -64,10 +87,26 @@ def current_agent_statuses():
     for row in schedules:
         agent = row[0]
         schedule = row[1:]
-        # print(f"Getting {agent}'s status for timeblock {timeblock}")
         try:
             agent_statuses[agent] = schedule[timeblock]
         except IndexError:
-            # print(f"{row[0]} has nothing for timeblock {timeblock}")
             agent_statuses[agent] = ""
     return agent_statuses
+
+
+def lambda_handler(event, context):
+    try:
+        CLIENT.ping()
+    except:
+        raise PermissionError('API key invalid.')
+    if len(sys.argv) == 2:
+        if sys.argv[1] == 'reset':
+            delete_schedule()
+            sys.exit()
+    print(f"Getting {DATASET_NAME} dataset")
+    schedule_dataset = get_schedule(SCHEDULE_SCHEMA)
+    print(f"Getting current schedule state")
+    current_schedule = format_dataset(current_agent_statuses())
+    print(f"Current schedule state:\n{json.dumps(current_schedule, indent=2)}")
+    set_schedule(current_schedule, SCHEDULE_SCHEMA)
+    print("Dataset updated!")
