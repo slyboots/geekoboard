@@ -5,12 +5,13 @@ verify_ssl = true
 
 [dev-packages]
 pylint = "*"
+aws-sam-cli = "*"
 
 [packages]
 geckoboard-py = "*"
 google-api-python-client = "*"
-oauth2client = "*"
-aws-sam-cli = "*"
+google-auth = "*"
+google-auth-httplib2 = "*"
 
 [requires]
 python_version = "3.7"
