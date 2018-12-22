@@ -1,14 +1,19 @@
-import os, sys, json, datetime
+import os
+import sys
+import json
+import logging
+import datetime
 import geckoboard
 from googleapiclient.discovery import build
-from httplib2 import Http
-from oauth2client import file, client, tools
+from google.oauth2 import service_account
 
+# disable google api warnings
+logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
 # VARS
 CLIENT = geckoboard.client(os.getenv('GECKO_API_KEY'))
 DATASET_NAME = 'agents.active_groups'
-SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
-CREDENTIALS = os.getenv('GOOGLE_SHEETS_CLIENT_CREDENTIALS')
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+CREDENTIALS = os.getenv('GOOGLE_SHEETS_SERVICE_CREDENTIALS')
 TOKEN = os.getenv('GOOGLE_SHEETS_TOKEN')
 SHEET_ID = os.getenv('SCHEDULE_SHEET_ID')
 AGENT_SCHEDULES_RANGE = 'AgentSchedules'
@@ -46,7 +51,7 @@ def get_schedule(schema):
     print(f"Retrieving gecko dataset: {DATASET_NAME}")
     return CLIENT.datasets.find_or_create(DATASET_NAME, schema)
 def set_schedule(data, schema):
-    print(f"Setting schedule with data:\n{json.dumps(data,indent=2)}")
+    print(f"Setting schedule with data:\n{json.dumps(data)}")
     schedule = get_schedule(schema)
     schedule.put(data)
 def delete_schedule():
@@ -55,12 +60,8 @@ def delete_schedule():
 
 
 def get_service():
-    store = file.Storage(TOKEN)
-    creds = store.get()
-    if not creds or creds.invalid:
-        flow = client.flow_from_clientsecrets(CREDENTIALS, SCOPES)
-        creds = tools.run_flow(flow, store)
-    service = build('sheets', 'v4', http=creds.authorize(Http()))
+    creds = service_account.Credentials.from_service_account_file(CREDENTIALS, scopes=SCOPES)
+    service = build('sheets', 'v4', credentials=creds)
     return service.spreadsheets()
 def get_schedule_timeline(sheets=None):
     if not sheets:
@@ -107,6 +108,9 @@ def lambda_handler(event, context):
     schedule_dataset = get_schedule(SCHEDULE_SCHEMA)
     print(f"Getting current schedule state")
     current_schedule = format_dataset(current_agent_statuses())
-    print(f"Current schedule state:\n{json.dumps(current_schedule, indent=2)}")
+    print(f"Current schedule state:\n{json.dumps(current_schedule)}")
     set_schedule(current_schedule, SCHEDULE_SCHEMA)
     print("Dataset updated!")
+
+if __name__ == '__main__':
+    lambda_handler(None, None)
