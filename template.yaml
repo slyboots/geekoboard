@@ -13,26 +13,24 @@ Globals:
 Parameters:
     GeckoApiKey:
         Type: String
-    GoogleSheetsClientCredentials:
-        Type: String
-    GoogleSheetsToken:
+    GoogleSheetsServiceCredentials:
         Type: String
     ScheduleSheetId:
         Type: String
 
 Resources:
-
     GeekoBoardFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
         Properties:
             CodeUri: geekoboard/build/
             Handler: app.lambda_handler
             Runtime: python3.6
+            Description: a script for updating geekoboard
+            FunctionName: geekoboard
             Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
                 Variables:
                     GECKO_API_KEY: !Ref GeckoApiKey
-                    GOOGLE_SHEETS_CLIENT_CREDENTIALS: !Ref GoogleSheetsClientCredentials
-                    GOOGLE_SHEETS_TOKEN: !Ref GoogleSheetsToken
+                    GOOGLE_SHEETS_SERVICE_CREDENTIALS: !Ref GoogleSheetsServiceCredentials
                     SCHEDULE_SHEET_ID: !Ref ScheduleSheetId
             Events:
                 AutoUpdateScheduledEvent:
@@ -41,14 +39,11 @@ Resources:
                         Schedule: cron(0/15 7-20 ? * MON-FRI *)
 
 Outputs:
-    GeekoBoardApi:
-      Description: "API Gateway endpoint URL for Prod stage for Geekoboard function"
-      Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/geekoboard/"
 
     GeekoBoardFunction:
-      Description: "Hello World Lambda Function ARN"
+      Description: "Sends updates to my company's geckoboard datasets"
       Value: !GetAtt GeekoBoardFunction.Arn
 
     GeekoBoardFunctionIamRole:
-      Description: "Implicit IAM Role created for Hello World function"
+      Description: "Implicit IAM Role created for geekoboard function"
       Value: !GetAtt GeekoBoardFunctionRole.Arn
