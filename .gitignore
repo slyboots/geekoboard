@@ -2,7 +2,7 @@
 .env*
 notes.md
 credentials/
-
+packaged.yaml
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
