@@ -36,7 +36,7 @@ Resources:
                 AutoUpdateScheduledEvent:
                     Type: Schedule # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
                     Properties:
-                        Schedule: cron(0/15 7-20 ? * MON-FRI *)
+                        Schedule: cron(0/5 7-20 ? * MON-FRI *)
 
 Outputs:
 
