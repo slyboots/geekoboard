@@ -61,17 +61,19 @@ def to_24hour(hourstring):
     offset = 12 if all(x not in hourstring for x in['12', 'AM']) else 0
     return (int(hourstring[:-2])+offset)%24
 def format_dataset(raw_schedule):
+    print("Converting Google Sheets data to Geckoboard schema.")
     return [{'agent': k.upper(), 'group': v.upper() or 'OTHER', 'status': ''} for k, v in raw_schedule.items()]
 # END GENERAL STUFF
 
 # GECKBOARD STUFF
 def get_gecko_dataset():
-    print(f"Retrieving gecko dataset: {GECKO_DATASET_NAME}")
     return GECKO_CLIENT.datasets.find_or_create(GECKO_DATASET_NAME, GECKO_DATA_SCHEMA)
 def set_gecko_dataset(data):
-    print(f"Setting gecko dataset with data:\n{json.dumps(data)}")
+    print(f"Pushing new data to Geckoboard '{GECKO_DATASET_NAME}' dataset.")
+    DEBUG and print(f"New data:\n{json.dumps(data)}")
     schedule = get_gecko_dataset()
     schedule.put(data)
+    print(f"Geckoboard '{GECKO_DATASET_NAME}' dataset updated!")
 def del_gecko_dataset():
     print(f"Deleting gecko dataset: {GECKO_DATASET_NAME}")
     GECKO_CLIENT.datasets.delete(GECKO_DATASET_NAME)
@@ -93,6 +95,7 @@ def get_agent_schedules():
     if not values: raise ValueError(f"{AGENT_SCHEDULES_RANGE} range empty")
     return values
 def current_agent_statuses():
+    print("Getting current schedule state from Google Sheets.")
     agent_statuses = {}
     timeblock = get_schedule_timeline().index(current_hour())
     schedules = get_agent_schedules()
@@ -111,7 +114,7 @@ def format_call_status(status):
     status_map = {
         'on_call': 'BUSY',
         'not_available': 'OFFLINE',
-        'available': 'ONLINE',
+        'available': 'AVAILABLE',
         'wrap_up': 'WRAPUP'
     }
     return status_map.get(status)
@@ -136,10 +139,13 @@ def get_zendesk_support_agents():
     if DEBUG: print(f"agents: {support_agents}")
     return support_agents
 def update_schedule_with_availability(schedule):
+    print("Getting Zendesk Talk status for agents")
     agents = get_zendesk_support_agents()
     for i in schedule:
         i.update(agents[i['agent']])
-    if DEBUG: print(f"schedule with online status: {schedule}")
+    DEBUG and print(f"schedule with online status: {schedule}")
+    # sorting the schedule for better display on geckoboard
+    schedule.sort(key=lambda k: k['status'], reverse=True)
 # END ZENDESK STUFF
 
 # main function
@@ -152,12 +158,10 @@ def updateGeckoBoard():
         if sys.argv[1] == 'reset':
             del_gecko_dataset()
             sys.exit()
-    print(f"Getting current schedule state")
-    current_schedule = format_dataset(current_agent_statuses())
-    update_schedule_with_availability(current_schedule)
-    print(f"Current schedule state:\n{json.dumps(current_schedule)}")
-    set_gecko_dataset(current_schedule)
-    print("Dataset updated!")
+    current_schedule_status = current_agent_statuses()
+    formatted_schedule = format_dataset(current_schedule_status)
+    update_schedule_with_availability(formatted_schedule)
+    set_gecko_dataset(formatted_schedule)
 
 def lambda_handler(event, context):
     DEBUG and print(f"execution event: {event}")
