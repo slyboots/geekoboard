@@ -90,8 +90,7 @@ def get_agent_schedules():
     schedules_range = GS_SERVICE.values().get(spreadsheetId=SCHEDULE_SHEET_ID, range=AGENT_SCHEDULES_RANGE).execute()
     values = schedules_range.get('values', [])
     DEBUG and print(f"get_agent_schedules: {json.dumps(values)}")
-    if not values:
-        raise ValueError(f"no data found for {AGENT_SCHEDULES_RANGE} range")
+    if not values: raise ValueError(f"{AGENT_SCHEDULES_RANGE} range empty")
     return values
 def current_agent_statuses():
     agent_statuses = {}
