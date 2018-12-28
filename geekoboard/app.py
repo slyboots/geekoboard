@@ -143,8 +143,8 @@ def update_schedule_with_availability(schedule):
     if DEBUG: print(f"schedule with online status: {schedule}")
 # END ZENDESK STUFF
 
-
-def lambda_handler(event, context):
+# main function
+def updateGeckoBoard():
     try:
         GECKO_CLIENT.ping()
     except:
@@ -160,5 +160,11 @@ def lambda_handler(event, context):
     set_gecko_dataset(current_schedule)
     print("Dataset updated!")
 
+def lambda_handler(event, context):
+    DEBUG and print(f"execution event: {event}")
+    DEBUG and print(f"execution context: {context}")
+    updateGeckoBoard()
+
+
 if __name__ == '__main__':
-    lambda_handler(None, None)
+    updateGeckoBoard()
