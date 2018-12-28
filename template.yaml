@@ -17,7 +17,12 @@ Parameters:
         Type: String
     ScheduleSheetId:
         Type: String
-
+    ZdApiUrl:
+        Type: String
+    ZdApiUser:
+        Type: String
+    ZdApiKey:
+        Type: String
 Resources:
     GeekoBoardFunction:
         Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -32,6 +37,10 @@ Resources:
                     GECKO_API_KEY: !Ref GeckoApiKey
                     GOOGLE_SHEETS_SERVICE_CREDENTIALS: !Ref GoogleSheetsServiceCredentials
                     SCHEDULE_SHEET_ID: !Ref ScheduleSheetId
+                    ZD_API_URL: !Ref ZdApiUrl
+                    ZD_API_USER: !Ref ZdApiUser
+                    ZD_API_KEY: !Ref ZdApiKey
+                    ZD_GROUP_ID: 20034207
             Events:
                 AutoUpdateScheduledEvent:
                     Type: Schedule # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
