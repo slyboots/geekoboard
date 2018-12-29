@@ -69,10 +69,17 @@ def format_dataset(raw_schedule):
 def get_gecko_dataset():
     return GECKO_CLIENT.datasets.find_or_create(GECKO_DATASET_NAME, GECKO_DATA_SCHEMA)
 def set_gecko_dataset(data):
+    default_data_set = [
+        {'agent': "", 'group': "KC", 'status': ""},
+        {'agent': "", 'group': "OUT", 'status': ""},
+        {'agent': "", 'group': "IN", 'status': ""},
+        {'agent': "", 'group': "OOO", 'status': ""},
+        {'agent': "", 'group': "OTHER", 'status': ""},
+    ]
     print(f"Pushing new data to Geckoboard '{GECKO_DATASET_NAME}' dataset.")
     DEBUG and print(f"New data:\n{json.dumps(data)}")
     schedule = get_gecko_dataset()
-    schedule.put(data)
+    schedule.put(default_data_set + data)
     print(f"Geckoboard '{GECKO_DATASET_NAME}' dataset updated!")
 def del_gecko_dataset():
     print(f"Deleting gecko dataset: {GECKO_DATASET_NAME}")
