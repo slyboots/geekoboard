@@ -68,18 +68,22 @@ def format_dataset(raw_schedule):
 # GECKBOARD STUFF
 def get_gecko_dataset():
     return GECKO_CLIENT.datasets.find_or_create(GECKO_DATASET_NAME, GECKO_DATA_SCHEMA)
+def with_dataset_spacers(data):
+    all_groups = ['KC', 'OUT', 'IN', 'OOO', 'OTHER']
+    active_groups = [d['group'] for d in data]
+    default_data_sets = {
+        'KC': {'agent': "", 'group': "KC", 'status': ""},
+        'OUT': {'agent': "", 'group': "OUT", 'status': ""},
+        'IN': {'agent': "", 'group': "IN", 'status': ""},
+        'OOO': {'agent': "", 'group': "OOO", 'status': ""},
+        'OTHER': {'agent': "", 'group': "OTHER", 'status': ""},
+    }
+    return [default_data_sets[d] for d in all_groups if d not in active_groups] + data
 def set_gecko_dataset(data):
-    default_data_set = [
-        {'agent': "", 'group': "KC", 'status': ""},
-        {'agent': "", 'group': "OUT", 'status': ""},
-        {'agent': "", 'group': "IN", 'status': ""},
-        {'agent': "", 'group': "OOO", 'status': ""},
-        {'agent': "", 'group': "OTHER", 'status': ""},
-    ]
     print(f"Pushing new data to Geckoboard '{GECKO_DATASET_NAME}' dataset.")
     DEBUG and print(f"New data:\n{json.dumps(data)}")
     schedule = get_gecko_dataset()
-    schedule.put(default_data_set + data)
+    schedule.put(with_dataset_spacers(data))
     print(f"Geckoboard '{GECKO_DATASET_NAME}' dataset updated!")
 def del_gecko_dataset():
     print(f"Deleting gecko dataset: {GECKO_DATASET_NAME}")
