@@ -121,19 +121,18 @@ def current_agent_statuses():
 # END GOOGLE SHEETS STUFF
 
 # ZENDESK STUFF
-def format_call_status(status):
+def format_availability(status):
     status_map = {
-        'on_call': 'BUSY',
-        'not_available': 'OFFLINE',
-        'available': 'AVAILABLE',
-        'wrap_up': 'WRAPUP'
+        'on_call': 'BUSY',          # call_status
+        'wrap_up': 'WRAPUP',        # call_status
+        None: status.get("agent_state").upper()
     }
-    return status_map.get(status)
+    return status_map.get(status.get("call_status"))
 def get_zendesk_talk_status(agent_id):
     talk_api = f"{ZD_API_URL}channels/voice/availabilities/{agent_id}.json"
     auth = requests.auth.HTTPBasicAuth(ZD_API_USER, ZD_API_KEY)
     zd_request = requests.get(talk_api, auth=auth)
-    return format_call_status(zd_request.json()["availability"]["status"])
+    return format_availability(zd_request.json()["availability"])
 def get_zendesk_support_agents():
     support_agents = {}
     support_api = f"{ZD_API_URL}/users.json?role[]=agent&role[]=admin"
