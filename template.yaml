@@ -45,11 +45,11 @@ Resources:
                 AutoUpdateScheduledEvent:
                     Type: Schedule # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
                     Properties:
-                        Schedule: cron(0/3 14-00 ? * MON-FRI *)
+                        Schedule: cron(0/2 14-00 ? * MON-FRI *)
                 AutoUpdateScheduledEvent2:
                     Type: Schedule # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
                     Properties:
-                        Schedule: cron(0/3 00-02 ? * MON-FRI *)
+                        Schedule: cron(*/2 00-02 ? * MON-FRI *)
 
 
 Outputs:
