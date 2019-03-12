@@ -55,7 +55,7 @@ GS_SERVICE = get_service()
 # GENERAL STUFF
 def current_hour():
     '''gets the current hour out of 24 as an int'''
-    return datetime.datetime.now(datetime.timezone(-datetime.timedelta(hours=6))).hour
+    return datetime.datetime.now(datetime.timezone(-datetime.timedelta(hours=5))).hour
 def to_24hour(hourstring):
     '''converts a time string like 8AM or 5PM to an int representing its 24 hour value'''
     offset = 12 if all(x not in hourstring for x in['12', 'AM']) else 0
